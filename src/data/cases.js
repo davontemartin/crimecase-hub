@@ -32,7 +32,14 @@ export const sampleCases = [
     ],
     tags: ["Hollywood", "1940s", "Female Victim", "Mutilation"],
     notoriety: 5,
-    mediaCount: { articles: 2400, videos: 180, images: 95 }
+    mediaCount: { articles: 2400, videos: 180, images: 95 },
+    media: {
+      documentaries: ["I Am the Night (TNT, 2019)", "The Black Dahlia Haunting (2012)"],
+      podcasts: ["Root of Evil — The True Story of the Hodel Family", "My Favorite Murder — Episode 15"],
+      youtubeChannels: ["Buzzfeed Unsolved", "Bailey Sarian", "JCS Criminal Psychology"],
+      newsOutlets: ["Los Angeles Times", "CBS News", "ABC News"],
+      books: ["Black Dahlia Avenger by Steve Hodel", "Severed by John Gilmore"]
+    }
   },
   {
     id: 2,
@@ -56,7 +63,14 @@ export const sampleCases = [
     ],
     tags: ["Ciphers", "1960s", "1970s", "Multiple Victims", "Taunting Letters"],
     notoriety: 5,
-    mediaCount: { articles: 3100, videos: 250, images: 120 }
+    mediaCount: { articles: 3100, videos: 250, images: 120 },
+    media: {
+      documentaries: ["This is the Zodiac Speaking (2007)", "Zodiac (David Fincher, 2007)"],
+      podcasts: ["Monster: The Zodiac Killer (iHeartRadio)", "Zodiac Killer: The Case Files"],
+      youtubeChannels: ["LEMMiNO", "Buzzfeed Unsolved", "True Crime Daily"],
+      newsOutlets: ["San Francisco Chronicle", "FBI.gov", "NBC News"],
+      books: ["Zodiac by Robert Graysmith", "Zodiac Unmasked by Robert Graysmith"]
+    }
   },
   {
     id: 3,

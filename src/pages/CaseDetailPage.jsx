@@ -190,7 +190,7 @@ export default function CaseDetailPage({ aiCases = [] }) {
           )}
 
           {/* Media & Coverage */}
-          <section className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-6">
+          <section id="media-section" className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-6 scroll-mt-20">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Film size={18} className="text-green-400" />
               Media & Coverage
