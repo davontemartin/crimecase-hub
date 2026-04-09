@@ -36,7 +36,7 @@ export default function CaseCard({ caseData, variant = 'default' }) {
       <Link
         to={`/cases/${caseData.id}`}
         className="flex items-center gap-4 p-4 glass-card rounded-xl
-                 hover-lift cursor-case group"
+                 hover-lift cursor-pointer group"
       >
         <div className="text-2xl">{typeIcons[caseData.type] || '📋'}</div>
         <div className="flex-1 min-w-0">
@@ -55,7 +55,7 @@ export default function CaseCard({ caseData, variant = 'default' }) {
   }
 
   const [imgError, setImgError] = useState(false);
-  const imageUrl = getCaseImageUrl(caseData, '600x300');
+  const imageUrl = getCaseImageUrl(caseData, '600/300');
   const gradient = getCaseImageGradient(caseData);
   const placeholder = getCasePlaceholderSvg(caseData);
 
@@ -63,7 +63,7 @@ export default function CaseCard({ caseData, variant = 'default' }) {
     <Link
       to={`/cases/${caseData.id}`}
       className="group block glass-card rounded-2xl overflow-hidden
-               hover-lift cursor-case relative"
+               hover-lift cursor-pointer relative"
     >
       {/* Case Image */}
       <div className="relative h-36 overflow-hidden bg-zinc-900">

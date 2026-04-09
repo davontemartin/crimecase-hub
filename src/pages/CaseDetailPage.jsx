@@ -9,6 +9,7 @@ import {
 import { sampleCases } from '../data/cases';
 import { useAI } from '../hooks/useAI';
 import { getCaseImageUrl, getCaseImageGradient, getCasePlaceholderSvg } from '../utils/caseImages';
+import CaseMediaSection from '../components/CaseMediaSection';
 
 const statusColors = {
   'Solved': 'bg-green-500/10 text-green-400 border-green-500/20',
@@ -85,7 +86,7 @@ export default function CaseDetailPage({ aiCases = [] }) {
 
   const statusClass = statusColors[caseData.status] || statusColors['Unsolved'];
 
-  const heroImage = getCaseImageUrl(caseData, '1200x400');
+  const heroImage = getCaseImageUrl(caseData, '1200/400');
   const heroGradient = getCaseImageGradient(caseData);
   const heroPlaceholder = getCasePlaceholderSvg(caseData);
 
@@ -216,116 +217,7 @@ export default function CaseDetailPage({ aiCases = [] }) {
           )}
 
           {/* Media & Coverage */}
-          <section id="media-section" className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-6 scroll-mt-20">
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Film size={18} className="text-green-400" />
-              Media & Coverage
-            </h2>
-
-            {/* Documentaries */}
-            {caseData.media?.documentaries?.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Video size={12} /> Documentaries
-                </h3>
-                <div className="grid sm:grid-cols-2 gap-2">
-                  {caseData.media.documentaries.map((doc, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-xl
-                                          hover:bg-zinc-800 transition-colors group">
-                      <div className="w-10 h-10 bg-purple-600/10 rounded-lg flex items-center justify-center shrink-0">
-                        <Video size={16} className="text-purple-400" />
-                      </div>
-                      <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">{doc}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Podcasts */}
-            {caseData.media?.podcasts?.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Mic size={12} /> Podcast Coverage
-                </h3>
-                <div className="grid sm:grid-cols-2 gap-2">
-                  {caseData.media.podcasts.map((pod, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-xl
-                                          hover:bg-zinc-800 transition-colors group">
-                      <div className="w-10 h-10 bg-green-600/10 rounded-lg flex items-center justify-center shrink-0">
-                        <Mic size={16} className="text-green-400" />
-                      </div>
-                      <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">{pod}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* YouTube */}
-            {caseData.media?.youtubeChannels?.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Video size={12} /> YouTube Coverage
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {caseData.media.youtubeChannels.map((ch, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-red-600/10 border border-red-600/20 rounded-lg
-                                           text-sm text-red-300 hover:bg-red-600/20 transition-colors cursor-pointer">
-                      {ch}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* News Outlets */}
-            {caseData.media?.newsOutlets?.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Newspaper size={12} /> News Coverage
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {caseData.media.newsOutlets.map((outlet, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-blue-600/10 border border-blue-600/20 rounded-lg
-                                           text-sm text-blue-300 hover:bg-blue-600/20 transition-colors cursor-pointer">
-                      {outlet}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Books */}
-            {caseData.media?.books?.length > 0 && (
-              <div className="mb-2">
-                <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <BookOpen size={12} /> Books
-                </h3>
-                <div className="space-y-1.5">
-                  {caseData.media.books.map((book, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm text-zinc-300">
-                      <BookOpen size={13} className="text-amber-400/60 shrink-0" />
-                      {book}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Fallback for cases without media field */}
-            {!caseData.media && caseData.mediaCount && (
-              <div className="text-center py-6">
-                <p className="text-sm text-zinc-400 mb-3">
-                  {caseData.mediaCount.articles.toLocaleString()} articles, {caseData.mediaCount.videos.toLocaleString()} videos,
-                  and {caseData.mediaCount.images.toLocaleString()} images available for this case.
-                </p>
-                <p className="text-xs text-zinc-500">
-                  Search for this case using AI to discover specific documentaries, podcasts, and news coverage.
-                </p>
-              </div>
-            )}
-          </section>
+          <CaseMediaSection caseData={caseData} />
 
           {/* AI Research */}
           <section className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-6">

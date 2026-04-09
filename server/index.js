@@ -257,6 +257,81 @@ Increment id starting from ${searchIdCounter}. Include 2-3 lesser-known cases (n
   }
 });
 
+// ─── Fetch Case Media (YouTube videos, articles, etc.) ──────────────
+app.post('/api/case-media', async (req, res) => {
+  try {
+    const { caseData } = req.body;
+
+    const system = `You are a media research assistant. Return ONLY valid JSON, no markdown fences, no extra text.`;
+
+    const prompt = `Find real, currently available media about the true crime case: "${caseData.title}"
+
+Case context: ${caseData.summary}
+
+Return JSON with REAL, EXISTING media that can actually be found online right now:
+{
+  "youtubeVideos": [
+    {
+      "title": "exact real video title",
+      "channel": "real channel name",
+      "description": "1 sentence about the video",
+      "searchQuery": "exact YouTube search query to find this video"
+    }
+  ],
+  "documentaries": [
+    {
+      "title": "exact documentary title",
+      "year": 2020,
+      "platform": "Netflix/HBO/Hulu/Amazon/YouTube/etc",
+      "description": "1 sentence description"
+    }
+  ],
+  "podcasts": [
+    {
+      "show": "exact podcast name",
+      "episode": "exact episode title or number",
+      "description": "1 sentence about the episode"
+    }
+  ],
+  "articles": [
+    {
+      "title": "real article headline",
+      "source": "real publication name",
+      "year": 2023,
+      "description": "1 sentence summary"
+    }
+  ],
+  "books": [
+    {
+      "title": "exact book title",
+      "author": "real author name",
+      "year": 2020,
+      "description": "1 sentence about the book"
+    }
+  ]
+}
+
+RULES:
+- Only include media that ACTUALLY EXISTS and can be found with a web search
+- Include 3-5 YouTube videos, 2-4 documentaries, 3-5 podcasts, 3-5 articles, 1-3 books
+- For YouTube videos, the searchQuery must find the actual video when searched on YouTube
+- Include a mix of major outlets and smaller true crime creators`;
+
+    const content = await chat(system, prompt, 4000);
+
+    let text = content.trim();
+    if (text.startsWith('```')) {
+      text = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+    }
+
+    const media = JSON.parse(text);
+    res.json(media);
+  } catch (error) {
+    console.error('Media fetch error:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch media' });
+  }
+});
+
 // ─── Health Check ────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', ai: 'OpenAI', model: 'gpt-4o' });

@@ -49,5 +49,9 @@ export function useAI() {
     request('/search-case', { query }),
   [request]);
 
-  return { loading, error, generateScript, generateShowNotes, researchCase, chatAboutCase, searchCases };
+  const fetchCaseMedia = useCallback((caseData) =>
+    request('/case-media', { caseData }),
+  [request]);
+
+  return { loading, error, generateScript, generateShowNotes, researchCase, chatAboutCase, searchCases, fetchCaseMedia };
 }
