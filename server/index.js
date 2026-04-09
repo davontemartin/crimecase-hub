@@ -308,13 +308,27 @@ Return JSON with REAL, EXISTING media that can actually be found online right no
       "year": 2020,
       "description": "1 sentence about the book"
     }
+  ],
+  "images": [
+    {
+      "title": "descriptive title of what the image shows",
+      "type": "one of: Crime Scene|Evidence|Mugshot|Victim Photo|Location|Court|Document|Composite Sketch|Map|Memorial",
+      "description": "what this image shows and its significance to the case",
+      "searchQuery": "exact Google Images search query to find this specific image",
+      "source": "where this image originates from (e.g. FBI, police department, news outlet)",
+      "sensitive": false
+    }
   ]
 }
 
 RULES:
 - Only include media that ACTUALLY EXISTS and can be found with a web search
 - Include 3-5 YouTube videos, 2-4 documentaries, 3-5 podcasts, 3-5 articles, 1-3 books
+- Include 5-8 images that are REAL and PUBLICLY AVAILABLE (not behind paywalls)
+- For images, include a mix of types: crime scene photos, evidence photos, mugshots, location photos, court sketches, maps, composite sketches, documents, etc.
+- Mark sensitive images (graphic crime scene photos) with "sensitive": true
 - For YouTube videos, the searchQuery must find the actual video when searched on YouTube
+- For images, the searchQuery must find the actual image when searched on Google Images
 - Include a mix of major outlets and smaller true crime creators`;
 
     const content = await chat(system, prompt, 4000);

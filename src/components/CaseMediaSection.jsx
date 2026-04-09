@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
   Film, Video, Mic, Newspaper, BookOpen, ExternalLink,
-  Loader2, Sparkles, Play, Radio, RefreshCw
+  Loader2, Sparkles, Play, Radio, RefreshCw, Image,
+  Camera, AlertTriangle, Eye, EyeOff, MapPin, FileText
 } from 'lucide-react';
 import { useAI } from '../hooks/useAI';
 
@@ -127,6 +128,11 @@ export default function CaseMediaSection({ caseData }) {
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Case Images */}
+          {media.images?.length > 0 && (
+            <CaseImageGallery images={media.images} caseTitle={caseData.title} />
           )}
 
           {/* Documentaries */}
@@ -269,5 +275,119 @@ export default function CaseMediaSection({ caseData }) {
         </div>
       )}
     </section>
+  );
+}
+
+const imageTypeIcons = {
+  'Crime Scene': { icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-600/10' },
+  'Evidence': { icon: FileText, color: 'text-amber-400', bg: 'bg-amber-600/10' },
+  'Mugshot': { icon: Camera, color: 'text-orange-400', bg: 'bg-orange-600/10' },
+  'Victim Photo': { icon: Eye, color: 'text-blue-400', bg: 'bg-blue-600/10' },
+  'Location': { icon: MapPin, color: 'text-green-400', bg: 'bg-green-600/10' },
+  'Court': { icon: FileText, color: 'text-purple-400', bg: 'bg-purple-600/10' },
+  'Document': { icon: FileText, color: 'text-cyan-400', bg: 'bg-cyan-600/10' },
+  'Composite Sketch': { icon: Camera, color: 'text-zinc-400', bg: 'bg-zinc-600/10' },
+  'Map': { icon: MapPin, color: 'text-emerald-400', bg: 'bg-emerald-600/10' },
+  'Memorial': { icon: Eye, color: 'text-pink-400', bg: 'bg-pink-600/10' },
+};
+
+function CaseImageGallery({ images, caseTitle }) {
+  const [revealedSensitive, setRevealedSensitive] = useState({});
+
+  const googleImagesUrl = (query) =>
+    `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`;
+
+  const toggleSensitive = (i) => {
+    setRevealedSensitive(prev => ({ ...prev, [i]: !prev[i] }));
+  };
+
+  return (
+    <div>
+      <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        <Camera size={12} className="text-cyan-400" /> Case Images & Evidence Photos
+      </h3>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {images.map((img, i) => {
+          const typeConfig = imageTypeIcons[img.type] || imageTypeIcons['Evidence'];
+          const Icon = typeConfig.icon;
+          const isSensitive = img.sensitive && !revealedSensitive[i];
+
+          return (
+            <div key={i} className="group relative">
+              {/* Image Card */}
+              <a
+                href={isSensitive ? undefined : googleImagesUrl(img.searchQuery)}
+                target={isSensitive ? undefined : '_blank'}
+                rel="noopener noreferrer"
+                onClick={isSensitive ? (e) => { e.preventDefault(); toggleSensitive(i); } : undefined}
+                className="block bg-zinc-800/50 border border-zinc-700/30 rounded-xl overflow-hidden
+                         hover:border-zinc-600/50 transition-all"
+              >
+                {/* Image placeholder with themed gradient */}
+                <div className="relative aspect-[4/3] bg-zinc-800 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={`https://picsum.photos/seed/img${caseTitle.length}${i}/300/225?grayscale&blur=${isSensitive ? '10' : '1'}`}
+                    alt=""
+                    className={`w-full h-full object-cover transition-all duration-300 ${
+                      isSensitive ? 'blur-xl scale-110 opacity-30' : 'opacity-50 group-hover:opacity-70 group-hover:scale-105'
+                    }`}
+                  />
+
+                  {/* Type badge */}
+                  <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-md
+                                ${typeConfig.bg} backdrop-blur-sm text-[10px] font-medium ${typeConfig.color}`}>
+                    <Icon size={10} />
+                    {img.type}
+                  </div>
+
+                  {/* Sensitive overlay */}
+                  {isSensitive && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/60">
+                      <EyeOff size={20} className="text-red-400 mb-1" />
+                      <span className="text-[10px] text-red-300 font-medium">Sensitive Content</span>
+                      <span className="text-[9px] text-zinc-400 mt-0.5">Click to reveal</span>
+                    </div>
+                  )}
+
+                  {/* View on Google overlay */}
+                  {!isSensitive && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0
+                                  group-hover:bg-black/40 transition-colors">
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1
+                                     px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-lg text-xs text-white font-medium">
+                        <ExternalLink size={12} /> View Image
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Source badge */}
+                  {img.source && (
+                    <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-black/60 rounded
+                                  text-[9px] text-zinc-300 backdrop-blur-sm">
+                      {img.source}
+                    </div>
+                  )}
+                </div>
+
+                {/* Caption */}
+                <div className="p-2.5">
+                  <p className="text-xs font-medium text-zinc-300 line-clamp-2 group-hover:text-white transition-colors">
+                    {img.title}
+                  </p>
+                  {img.description && (
+                    <p className="text-[10px] text-zinc-500 mt-0.5 line-clamp-2">{img.description}</p>
+                  )}
+                </div>
+              </a>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="text-[10px] text-zinc-600 mt-2 italic">
+        Images link to Google Image search results. Some images may be sensitive in nature.
+      </p>
+    </div>
   );
 }
