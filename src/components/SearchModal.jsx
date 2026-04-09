@@ -172,7 +172,7 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
             <div className="px-5 py-8 text-center">
               <Search size={32} className="mx-auto mb-3 text-zinc-600" />
               <p className="text-zinc-400 mb-1">No local cases found for "{query}"</p>
-              <p className="text-sm text-zinc-500 mb-4">Want Claude to search for real cases?</p>
+              <p className="text-sm text-zinc-500 mb-4">Want AI to search for real cases?</p>
               <button
                 onClick={handleAISearch}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500
@@ -203,7 +203,7 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
           {aiSearching && (
             <div className="px-5 py-8 text-center">
               <Loader2 size={28} className="mx-auto mb-3 text-amber-400 animate-spin" />
-              <p className="text-zinc-300">Claude is searching for cases...</p>
+              <p className="text-zinc-300">AI is searching for cases...</p>
               <p className="text-xs text-zinc-500 mt-1">Finding real criminal cases matching "{query}"</p>
             </div>
           )}
@@ -252,7 +252,7 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
             <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-400">esc</kbd> Close
           </span>
           <span className="ml-auto flex items-center gap-1 text-amber-400">
-            <Sparkles size={10} /> Powered by Claude AI
+            <Sparkles size={10} /> Powered by AI
           </span>
         </div>
       </div>

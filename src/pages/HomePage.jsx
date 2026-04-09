@@ -74,7 +74,7 @@ export default function HomePage({ onSearchOpen }) {
               <p className="text-sm text-zinc-500 mb-8 max-w-2xl font-mono flex items-center gap-2">
                 <Sparkles size={14} className="text-amber-400" />
                 <TypewriterText
-                  text="Powered by Claude AI — search any case, generate scripts, deep research on demand."
+                  text="Powered by AI — search any case, generate scripts, deep research on demand."
                   speed={25}
                   delay={1000}
                 />

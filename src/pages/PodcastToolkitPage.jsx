@@ -231,7 +231,7 @@ ${caseData.tags.map(t => `#${t.replace(/\s+/g, '')}`).join(' ')}
                 {ai.loading ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    Claude is writing show notes...
+                    AI is writing show notes...
                   </>
                 ) : (
                   <>

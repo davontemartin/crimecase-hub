@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Calendar, Tag, ChevronRight, Newspaper, Video, Image, Flame, Eye } from 'lucide-react';
 import DangerMeter from './DangerMeter';
+import { getCaseImageUrl, getCaseImageGradient, getCasePlaceholderSvg } from '../utils/caseImages';
 
 const statusColors = {
   'Solved': 'bg-green-500/10 text-green-400 border-green-500/20',
@@ -52,35 +54,49 @@ export default function CaseCard({ caseData, variant = 'default' }) {
     );
   }
 
+  const [imgError, setImgError] = useState(false);
+  const imageUrl = getCaseImageUrl(caseData, '600x300');
+  const gradient = getCaseImageGradient(caseData);
+  const placeholder = getCasePlaceholderSvg(caseData);
+
   return (
     <Link
       to={`/cases/${caseData.id}`}
       className="group block glass-card rounded-2xl overflow-hidden
                hover-lift cursor-case relative"
     >
-      {/* Glow effect on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-600/0 via-transparent to-transparent
-                    opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500 rounded-2xl" />
+      {/* Case Image */}
+      <div className="relative h-36 overflow-hidden bg-zinc-900">
+        <img
+          src={imgError ? placeholder : imageUrl}
+          alt={caseData.title}
+          onError={() => setImgError(true)}
+          loading="lazy"
+          className="w-full h-full object-cover transition-transform duration-700
+                   group-hover:scale-110 opacity-70 group-hover:opacity-90"
+        />
+        {/* Dark gradient overlay */}
+        <div className={`absolute inset-0 bg-gradient-to-t ${gradient}`} />
 
-      {/* Top accent line */}
-      <div className="h-0.5 bg-gradient-to-r from-red-600 via-red-500 to-transparent
-                    scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
+        {/* Status badge on image */}
+        <div className="absolute top-3 right-3 flex items-center gap-1.5">
+          <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_6px] ${dotClass}`} />
+          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium backdrop-blur-sm ${statusClass}`}>
+            {caseData.status}
+          </span>
+        </div>
 
-      <div className="p-5 relative">
-        {/* Type & Status Row */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 uppercase tracking-wider">
+        {/* Type on image */}
+        <div className="absolute bottom-3 left-4">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-300/80 uppercase tracking-wider
+                         drop-shadow-lg">
             <span className="text-base">{typeIcons[caseData.type] || '📋'}</span>
             {caseData.type}
           </span>
-          <div className="flex items-center gap-2">
-            <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_6px] ${dotClass}`} />
-            <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${statusClass}`}>
-              {caseData.status}
-            </span>
-          </div>
         </div>
+      </div>
 
+      <div className="p-5 relative">
         {/* Title with glitch on hover for unsolved */}
         <h3 className={`text-lg font-bold text-white group-hover:text-red-400 transition-colors mb-1
                       ${caseData.status === 'Unsolved' ? 'glitch' : ''}`}

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { sampleCases } from '../data/cases';
 import { useAI } from '../hooks/useAI';
+import { getCaseImageUrl, getCaseImageGradient, getCasePlaceholderSvg } from '../utils/caseImages';
 
 const statusColors = {
   'Solved': 'bg-green-500/10 text-green-400 border-green-500/20',
@@ -84,35 +85,60 @@ export default function CaseDetailPage({ aiCases = [] }) {
 
   const statusClass = statusColors[caseData.status] || statusColors['Unsolved'];
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      {/* Breadcrumb */}
-      <Link to="/cases" className="inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-red-400 mb-6 transition-colors">
-        <ArrowLeft size={14} />
-        Back to Case Files
-      </Link>
+  const heroImage = getCaseImageUrl(caseData, '1200x400');
+  const heroGradient = getCaseImageGradient(caseData);
+  const heroPlaceholder = getCasePlaceholderSvg(caseData);
 
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-wrap items-center gap-3 mb-3">
-          <span className={`text-sm px-3 py-1 rounded-full border font-medium ${statusClass}`}>
-            {caseData.status}
-          </span>
-          <span className="text-sm text-zinc-500 flex items-center gap-1">
-            <Tag size={13} /> {caseData.type}
-          </span>
-          <span className="text-sm text-zinc-500 flex items-center gap-1">
-            <MapPin size={13} /> {caseData.location}
-          </span>
-          <span className="text-sm text-zinc-500 flex items-center gap-1">
-            <Calendar size={13} /> {new Date(caseData.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-          </span>
+  return (
+    <div>
+      {/* Hero Banner */}
+      <div className="relative h-56 sm:h-72 overflow-hidden">
+        <img
+          src={heroImage}
+          alt={caseData.title}
+          onError={e => { e.target.src = heroPlaceholder; }}
+          className="w-full h-full object-cover"
+        />
+        <div className={`absolute inset-0 bg-gradient-to-t ${heroGradient}`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent" />
+
+        {/* Back button over image */}
+        <div className="absolute top-4 left-4 sm:left-8">
+          <Link to="/cases" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/40 backdrop-blur-sm
+                                     border border-white/10 rounded-lg text-sm text-zinc-200 hover:text-white
+                                     hover:bg-black/60 transition-all">
+            <ArrowLeft size={14} />
+            Back to Case Files
+          </Link>
         </div>
 
-        <h1 className="text-3xl sm:text-5xl font-black text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>
-          {caseData.title}
-        </h1>
+        {/* Title over image */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-6 max-w-7xl mx-auto">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className={`text-sm px-3 py-1 rounded-full border font-medium backdrop-blur-sm ${statusClass}`}>
+              {caseData.status}
+            </span>
+            <span className="text-sm text-zinc-300/70 flex items-center gap-1">
+              <Tag size={12} /> {caseData.type}
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-black text-white drop-shadow-lg" style={{ fontFamily: 'var(--font-display)' }}>
+            {caseData.title}
+          </h1>
+        </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      {/* Header Meta */}
+      <div className="mb-6">
+        <div className="flex flex-wrap items-center gap-3 mb-2">
+          <span className="text-sm text-zinc-400 flex items-center gap-1">
+            <MapPin size={13} className="text-red-500/60" /> {caseData.location}
+          </span>
+          <span className="text-sm text-zinc-400 flex items-center gap-1">
+            <Calendar size={13} className="text-red-500/60" /> {new Date(caseData.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </span>
+        </div>
         <p className="text-lg text-zinc-300">
           <span className="text-zinc-500">Victim(s):</span> {caseData.victim}
         </p>
@@ -307,7 +333,7 @@ export default function CaseDetailPage({ aiCases = [] }) {
               <Brain size={18} className="text-amber-400" />
               AI Deep Research
               <span className="text-xs px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-400 font-normal">
-                Powered by Claude
+                Powered by AI
               </span>
             </h2>
             <div className="grid grid-cols-2 gap-2 mb-4">
@@ -338,7 +364,7 @@ export default function CaseDetailPage({ aiCases = [] }) {
             {researchLoading && (
               <div className="flex items-center gap-3 p-4 bg-zinc-800/50 rounded-xl text-sm text-zinc-300">
                 <Loader2 size={16} className="animate-spin text-amber-400" />
-                Claude is researching {caseData.title}...
+                AI is researching {caseData.title}...
               </div>
             )}
             {researchResult && !researchLoading && (
@@ -360,7 +386,7 @@ export default function CaseDetailPage({ aiCases = [] }) {
                   AI Chat
                 </span>
               </h2>
-              <p className="text-xs text-zinc-500 mt-1">Ask Claude anything about {caseData.title}</p>
+              <p className="text-xs text-zinc-500 mt-1">Ask AI anything about {caseData.title}</p>
             </div>
 
             {/* Messages */}
@@ -531,6 +557,7 @@ export default function CaseDetailPage({ aiCases = [] }) {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

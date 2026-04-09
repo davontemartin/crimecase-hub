@@ -238,7 +238,7 @@ export default function ScriptGeneratorPage() {
                     />
                     <span className="flex items-center gap-1.5 text-zinc-300">
                       <Sparkles size={14} className="text-amber-400" />
-                      Use Claude AI
+                      Use AI
                     </span>
                     <span className="text-xs text-zinc-500 ml-auto">Recommended</span>
                   </label>
@@ -280,7 +280,7 @@ export default function ScriptGeneratorPage() {
                   {ai.loading ? (
                     <>
                       <Loader2 size={18} className="animate-spin" />
-                      Claude is writing your script...
+                      AI is writing your script...
                     </>
                   ) : (
                     <>
