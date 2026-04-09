@@ -240,8 +240,23 @@ Increment id starting from ${searchIdCounter}. Include 1-2 lesser-known cases. 3
     if (text.startsWith('```')) {
       text = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
+    text = text
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/,\s*}/g, '}')
+      .replace(/,\s*]/g, ']');
 
-    const cases = JSON.parse(text);
+    let cases;
+    try {
+      cases = JSON.parse(text);
+    } catch {
+      const match = text.match(/\[[\s\S]*\]/);
+      if (match) {
+        cases = JSON.parse(match[0].replace(/,\s*}/g, '}').replace(/,\s*]/g, ']'));
+      } else {
+        throw new Error('Invalid response from AI');
+      }
+    }
     res.json({ cases, source: 'ai' });
   } catch (error) {
     console.error('Search error:', error);
@@ -258,83 +273,71 @@ app.post('/api/case-media', async (req, res) => {
 
     const prompt = `Find real, currently available media about the true crime case: "${caseData.title}"
 
-Case context: ${caseData.summary}
+Case: ${caseData.summary}
 
-Return JSON with REAL, EXISTING media that can actually be found online right now:
+Return JSON. NEVER use apostrophes or special characters inside string values. Use simple straight quotes only if needed. Keep all string values short (under 80 chars).
+
 {
   "youtubeVideos": [
-    {
-      "title": "exact real video title",
-      "channel": "real channel name",
-      "description": "1 sentence about the video",
-      "searchQuery": "exact YouTube search query to find this video"
-    }
+    {"title": "video title", "channel": "channel name", "searchQuery": "youtube search query"}
   ],
   "documentaries": [
-    {
-      "title": "exact documentary title",
-      "year": 2020,
-      "platform": "Netflix/HBO/Hulu/Amazon/YouTube/etc",
-      "description": "1 sentence description"
-    }
+    {"title": "doc title", "year": 2020, "platform": "Netflix"}
   ],
   "podcasts": [
-    {
-      "show": "exact podcast name",
-      "episode": "exact episode title or number",
-      "description": "1 sentence about the episode"
-    }
+    {"show": "podcast name", "episode": "episode title"}
   ],
   "articles": [
-    {
-      "title": "real article headline",
-      "source": "real publication name",
-      "year": 2023,
-      "description": "1 sentence summary"
-    }
+    {"title": "headline", "source": "publication", "year": 2023}
   ],
   "books": [
-    {
-      "title": "exact book title",
-      "author": "real author name",
-      "year": 2020,
-      "description": "1 sentence about the book"
-    }
+    {"title": "book title", "author": "author name"}
   ],
   "images": [
-    {
-      "title": "descriptive title of what the image shows",
-      "type": "one of: Crime Scene|Evidence|Mugshot|Victim Photo|Location|Court|Document|Composite Sketch|Map|Memorial",
-      "description": "what this image shows and its significance to the case",
-      "searchQuery": "exact Google Images search query to find this specific image",
-      "source": "where this image originates from (e.g. FBI, police department, news outlet)",
-      "sensitive": false
-    }
+    {"title": "image description", "type": "Evidence", "searchQuery": "google image search query", "source": "FBI", "sensitive": false}
   ]
 }
 
-RULES:
-- Only include media that ACTUALLY EXISTS and can be found with a web search
-- Include 3-5 YouTube videos, 2-4 documentaries, 3-5 podcasts, 3-5 articles, 1-3 books
-- Include 5-8 images that are REAL and PUBLICLY AVAILABLE (not behind paywalls)
-- For images, include a mix of types: crime scene photos, evidence photos, mugshots, location photos, court sketches, maps, composite sketches, documents, etc.
-- Mark sensitive images (graphic crime scene photos) with "sensitive": true
-- For YouTube videos, the searchQuery must find the actual video when searched on YouTube
-- For images, the searchQuery must find the actual image when searched on Google Images
-- Include a mix of major outlets and smaller true crime creators`;
+Include 3 youtubeVideos, 2 documentaries, 2 podcasts, 3 articles, 1 book, 4 images.
+Image types: Crime Scene, Evidence, Mugshot, Location, Court, Composite Sketch, Map, Memorial.
+Mark graphic images sensitive:true. All media must be REAL.`;
 
-    const content = await chat(system, prompt, 3000);
+    const content = await chat(system, prompt, 2500);
 
     let text = content.trim();
     if (text.startsWith('```')) {
       text = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
 
-    const media = JSON.parse(text);
+    // Fix common JSON issues from LLM output
+    text = text
+      .replace(/[\u2018\u2019]/g, "'")   // smart single quotes
+      .replace(/[\u201C\u201D]/g, '"')   // smart double quotes
+      .replace(/,\s*}/g, '}')            // trailing commas before }
+      .replace(/,\s*]/g, ']');           // trailing commas before ]
+
+    let media;
+    try {
+      media = JSON.parse(text);
+    } catch (parseErr) {
+      // Try to salvage — extract the JSON object
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) {
+        let cleaned = match[0]
+          .replace(/[\u2018\u2019]/g, "'")
+          .replace(/[\u201C\u201D]/g, '"')
+          .replace(/,\s*}/g, '}')
+          .replace(/,\s*]/g, ']');
+        media = JSON.parse(cleaned);
+      } else {
+        throw parseErr;
+      }
+    }
+
     res.json(media);
   } catch (error) {
-    console.error('Media fetch error:', error);
-    res.status(500).json({ error: error.message || 'Failed to fetch media' });
+    console.error('Media fetch error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch media. Try refreshing.' });
   }
 });
 
