@@ -1,17 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, ArrowRight, Clock, Tag, MapPin, Sparkles, Loader2 } from 'lucide-react';
+import { Search, X, ArrowRight, Clock, Tag, MapPin, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { sampleCases } from '../data/cases';
-import { useAI } from '../hooks/useAI';
+
+const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api';
 
 export default function SearchModal({ isOpen, onClose, onAddCases }) {
   const [query, setQuery] = useState('');
   const [localResults, setLocalResults] = useState([]);
   const [aiResults, setAiResults] = useState([]);
   const [aiSearching, setAiSearching] = useState(false);
+  const [aiError, setAiError] = useState(null);
   const inputRef = useRef(null);
   const navigate = useNavigate();
-  const ai = useAI();
 
   useEffect(() => {
     if (isOpen) {
@@ -19,14 +20,13 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
       setQuery('');
       setLocalResults([]);
       setAiResults([]);
+      setAiError(null);
     }
   }, [isOpen]);
 
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
+      if (e.key === 'Escape' && isOpen) onClose();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -35,7 +35,6 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
   useEffect(() => {
     if (!query.trim()) {
       setLocalResults([]);
-      setAiResults([]);
       return;
     }
     const q = query.toLowerCase();
@@ -51,17 +50,30 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
     setLocalResults(filtered);
   }, [query]);
 
+  // Standalone fetch — doesn't share state with other components
   const handleAISearch = async () => {
-    if (!query.trim()) return;
+    if (!query.trim() || aiSearching) return;
     setAiSearching(true);
+    setAiError(null);
     try {
-      const result = await ai.searchCases(query);
-      if (result.cases && result.cases.length > 0) {
-        setAiResults(result.cases);
-        if (onAddCases) onAddCases(result.cases);
+      const res = await fetch(`${API_BASE}/search-case`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Search failed');
       }
-    } catch {
-      // silently fail
+      const data = await res.json();
+      if (data.cases?.length > 0) {
+        setAiResults(data.cases);
+        if (onAddCases) onAddCases(data.cases);
+      } else {
+        setAiError('No cases found for that search.');
+      }
+    } catch (err) {
+      setAiError(err.message || 'Search failed. Try again.');
     }
     setAiSearching(false);
   };
@@ -69,14 +81,10 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
   if (!isOpen) return null;
 
   const goToCase = (caseData) => {
-    if (caseData.id >= 1000 && onAddCases) {
-      onAddCases([caseData]);
-    }
+    if (caseData.id >= 1000 && onAddCases) onAddCases([caseData]);
     navigate(`/cases/${caseData.id}`);
     onClose();
   };
-
-  const allResults = [...localResults, ...aiResults.filter(ai => !localResults.find(l => l.id === ai.id))];
 
   const renderCaseResult = (c, source) => (
     <button
@@ -132,8 +140,8 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
             type="text"
             placeholder="Search cases, victims, locations, crime types..."
             value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && localResults.length === 0) handleAISearch(); }}
+            onChange={e => { setQuery(e.target.value); setAiResults([]); setAiError(null); }}
+            onKeyDown={e => { if (e.key === 'Enter') handleAISearch(); }}
             className="flex-1 bg-transparent text-white text-lg outline-none placeholder:text-zinc-500"
           />
           <button onClick={onClose} className="text-zinc-400 hover:text-white">
@@ -148,7 +156,7 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
             <>
               <div className="px-5 pt-3 pb-1">
                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                  Database Results ({localResults.length})
+                  Database ({localResults.length})
                 </p>
               </div>
               {localResults.map(c => renderCaseResult(c, 'local'))}
@@ -160,42 +168,20 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
             <>
               <div className="px-5 pt-3 pb-1">
                 <p className="text-xs font-medium text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles size={11} /> AI-Discovered Cases ({aiResults.length})
+                  <Sparkles size={11} /> AI Results ({aiResults.length})
                 </p>
               </div>
               {aiResults.map(c => renderCaseResult(c, 'ai'))}
             </>
           )}
 
-          {/* No results + AI search option */}
-          {query && localResults.length === 0 && aiResults.length === 0 && !aiSearching && (
-            <div className="px-5 py-8 text-center">
-              <Search size={32} className="mx-auto mb-3 text-zinc-600" />
-              <p className="text-zinc-400 mb-1">No local cases found for "{query}"</p>
-              <p className="text-sm text-zinc-500 mb-4">Want AI to search for real cases?</p>
-              <button
-                onClick={handleAISearch}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500
-                         text-white font-medium rounded-xl transition-all text-sm"
-              >
-                <Sparkles size={15} />
-                Search with AI
-              </button>
-            </div>
-          )}
-
-          {/* Also offer AI search when local results exist */}
-          {query && localResults.length > 0 && aiResults.length === 0 && !aiSearching && (
-            <div className="px-5 py-3 border-t border-zinc-800/50">
-              <button
-                onClick={handleAISearch}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5
-                         bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white
-                         font-medium rounded-xl transition-all text-sm"
-              >
-                <Sparkles size={14} className="text-amber-400" />
-                Find more cases with AI
-              </button>
+          {/* AI Error */}
+          {aiError && (
+            <div className="px-5 py-4">
+              <div className="flex items-center gap-2 p-3 bg-red-950/30 border border-red-900/20 rounded-xl text-sm text-red-300">
+                <AlertCircle size={14} />
+                {aiError}
+              </div>
             </div>
           )}
 
@@ -203,8 +189,23 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
           {aiSearching && (
             <div className="px-5 py-8 text-center">
               <Loader2 size={28} className="mx-auto mb-3 text-amber-400 animate-spin" />
-              <p className="text-zinc-300">AI is searching for cases...</p>
+              <p className="text-zinc-300">Searching for cases...</p>
               <p className="text-xs text-zinc-500 mt-1">Finding real criminal cases matching "{query}"</p>
+            </div>
+          )}
+
+          {/* Prompt to AI search */}
+          {query && !aiSearching && aiResults.length === 0 && (
+            <div className="px-5 py-4 border-t border-zinc-800/50">
+              <button
+                onClick={handleAISearch}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5
+                         bg-red-600 hover:bg-red-500 text-white
+                         font-medium rounded-xl transition-all text-sm"
+              >
+                <Sparkles size={14} />
+                {localResults.length > 0 ? 'Find more cases with AI' : 'Search with AI'}
+              </button>
             </div>
           )}
 
@@ -225,10 +226,10 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
                 ))}
               </div>
               <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3 mt-5">
-                Or search for any case
+                Try searching for any case
               </p>
               <div className="flex flex-wrap gap-2">
-                {['Dahmer', 'Menendez Brothers', 'OJ Simpson', 'Amelia Earhart', 'Natalie Holloway'].map(tag => (
+                {['Menendez Brothers', 'OJ Simpson', 'Amelia Earhart', 'Natalie Holloway', 'Casey Anthony'].map(tag => (
                   <button
                     key={tag}
                     onClick={() => { setQuery(tag); }}
@@ -246,7 +247,7 @@ export default function SearchModal({ isOpen, onClose, onAddCases }) {
         {/* Footer */}
         <div className="flex items-center gap-4 px-5 py-3 border-t border-zinc-800 text-xs text-zinc-500">
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-400">↵</kbd> AI Search
+            <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-400">↵</kbd> Search
           </span>
           <span className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-400">esc</kbd> Close

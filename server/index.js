@@ -19,9 +19,10 @@ app.use(express.static(distPath));
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-async function chat(systemPrompt, userPrompt, maxTokens = 4000) {
+// gpt-4o for high-quality output, gpt-4o-mini for lighter tasks
+async function chat(systemPrompt, userPrompt, maxTokens = 4000, model = 'gpt-4o-mini') {
   const res = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model,
     max_tokens: maxTokens,
     messages: [
       { role: 'system', content: systemPrompt },
@@ -31,9 +32,9 @@ async function chat(systemPrompt, userPrompt, maxTokens = 4000) {
   return res.choices[0].message.content;
 }
 
-async function chatWithHistory(systemPrompt, messages, maxTokens = 2000) {
+async function chatWithHistory(systemPrompt, messages, maxTokens = 2000, model = 'gpt-4o-mini') {
   const res = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model,
     max_tokens: maxTokens,
     messages: [
       { role: 'system', content: systemPrompt },
@@ -84,7 +85,7 @@ ${style === 'podcast-casual' ? 'Warm, conversational tone. Natural language, dir
 
 Write the complete script now.`;
 
-    const content = await chat(system, prompt, 8000);
+    const content = await chat(system, prompt, 8000, 'gpt-4o');
     const wordCount = content.split(/\s+/).length;
 
     res.json({
@@ -121,7 +122,7 @@ Timeline: ${(caseData.timeline || []).map(e => `${e.date}: ${e.event}`).join(' |
 
 Include: Episode Title, Description (2-3 paragraphs), Key Facts, Timeline, Evidence Summary, Suspects, Discussion Points (5-7), Content Warnings, Keywords/Tags, Further Reading suggestions. Format in Markdown.`;
 
-    const content = await chat(system, prompt, 4000);
+    const content = await chat(system, prompt, 3000);
     res.json({ content });
   } catch (error) {
     console.error('Show notes error:', error);
@@ -196,13 +197,11 @@ app.post('/api/search-case', async (req, res) => {
 
     const prompt = `Search for real criminal cases matching: "${query}"
 
-Return a JSON array of up to 8 real, documented criminal cases.
+Return a JSON array of up to 5 real, documented criminal cases.
 
 RULES:
 - Mix of well-known AND lesser-known/local cases
 - Every case must be REAL with verifiable facts
-- Include real media: actual documentary names, real podcast episodes, real YouTube channels, real news outlets, real books
-- Cases must have actual coverage available online
 
 JSON structure:
 [
@@ -225,24 +224,17 @@ JSON structure:
       {"date": "YYYY-MM-DD", "event": "what happened"},
       {"date": "YYYY-MM-DD", "event": "what happened"}
     ],
-    "tags": ["tag1", "tag2", "tag3", "tag4"],
+    "tags": ["tag1", "tag2", "tag3"],
     "notoriety": 1-5,
-    "mediaCount": {"articles": 0, "videos": 0, "images": 0},
-    "media": {
-      "documentaries": ["real doc (year, platform)"],
-      "podcasts": ["real podcast — episode"],
-      "youtubeChannels": ["real channel"],
-      "newsOutlets": ["real outlet"],
-      "books": ["real book by author"]
-    }
+    "mediaCount": {"articles": 0, "videos": 0, "images": 0}
   }
 ]
 
-Increment id starting from ${searchIdCounter}. Include 2-3 lesser-known cases (notoriety 1-3). At least 5 timeline events and 4 evidence items per case.`;
+Increment id starting from ${searchIdCounter}. Include 1-2 lesser-known cases. 3 timeline events and 3 evidence items per case is enough.`;
 
     searchIdCounter += 10;
 
-    const content = await chat(system, prompt, 8000);
+    const content = await chat(system, prompt, 4000);
 
     let text = content.trim();
     if (text.startsWith('```')) {
@@ -331,7 +323,7 @@ RULES:
 - For images, the searchQuery must find the actual image when searched on Google Images
 - Include a mix of major outlets and smaller true crime creators`;
 
-    const content = await chat(system, prompt, 4000);
+    const content = await chat(system, prompt, 3000);
 
     let text = content.trim();
     if (text.startsWith('```')) {
